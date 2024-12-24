@@ -1,0 +1,27 @@
+plugins:
+  discourse_plugin_elastic_apm:
+    default: false
+    client: true
+    type: boolean
+  elastic_apm_service_name:
+    default: "Discourse"
+    type: text
+  elastic_apm_server_url:
+    default: "http://localhost:8200"
+    type: text
+  elastic_apm_secret_token:
+    default: ""
+    type: text
+  elastic_apm_transaction_sample_rate:
+    default: 1.0
+    type: float
+    min: 0.0
+    max: 1.0
+  elastic_apm_log_level:
+    default: debug
+    type: list
+    choices:
+      - debug
+      - info
+      - warn
+      - error

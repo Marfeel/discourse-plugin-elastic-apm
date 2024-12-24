@@ -1,0 +1,8 @@
+en:
+  site_settings:
+    discourse_plugin_elastic_apm: "Enable or disable the Elastic APM integration."
+    elastic_apm_service_name: "Name of the service for Elastic APM."
+    elastic_apm_server_url: "URL of the Elastic APM server (leave blank for default)."
+    elastic_apm_secret_token: "Elastic APM server secret token (leave blank for default)."
+    elastic_apm_transaction_sample_rate: "Set the transaction sample rate for Elastic APM (value between 0.0 and 1.0)."
+    elastic_apm_log_level: "Set the log level for Elastic APM."
