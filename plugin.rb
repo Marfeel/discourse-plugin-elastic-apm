@@ -18,62 +18,62 @@ gem 'http', '5.2.0', { require: false }
 gem 'elastic-apm', '4.7.3', { require: false }
 
 module DiscourseElasticApm
-	class ElasticApmWrapper
-		def initialize(app)
-			@app = app
-		end
+  class ElasticApmMiddlewareWrapper
+    def initialize(app)
+      @app = app
+    end
 
-		def call(env)
-			if plugin_active?
-				ElasticAPM::Middleware.new(@app).call(env)
-			else
-				@app.call(env)
-			end
-		end
+    def call(env)
+      if plugin_active?
+        ElasticAPM::Middleware.new(@app).call(env)
+      else
+        @app.call(env)
+      end
+    end
 
-		private
+    private
 
-		def plugin_active?
-			SiteSetting.discourse_plugin_elastic_apm && defined?(ElasticAPM)
-		end
-	end
-end
+    def plugin_active?
+      SiteSetting.discourse_plugin_elastic_apm && defined?(ElasticAPM)
+    end
+  end
 
-def manage_elastic_apm
-	if defined?(ElasticAPM) && ElasticAPM.running?
-		ElasticAPM.stop
-	end
+  def self.manage_elastic_apm
+    if defined?(ElasticAPM) && ElasticAPM.running?
+      ElasticAPM.stop
+    end
 
-	if SiteSetting.discourse_plugin_elastic_apm
-		unless defined?(ElasticAPM)
-			begin
-				require 'elastic-apm'
-			rescue LoadError => e
-				Rails.logger.error "Failed to load ElasticAPM gem: #{e.message}"
-				return
-			end
-		end
+    if SiteSetting.discourse_plugin_elastic_apm
+      unless defined?(ElasticAPM)
+        begin
+          require 'elastic-apm'
+        rescue LoadError => e
+          Rails.logger.error "Failed to load ElasticAPM gem: #{e.message}"
+          return
+        end
+      end
 
-		ElasticAPM::Rails.start(
-			secret_token: SiteSetting.elastic_apm_secret_token,
-			log_level: SiteSetting.elastic_apm_log_level,
-			service_name: SiteSetting.elastic_apm_service_name,
-			server_url: SiteSetting.elastic_apm_server_url,
-			transaction_sample_rate: SiteSetting.elastic_apm_transaction_sample_rate,
-		)
-	end
+      ElasticAPM::Rails.start(
+        secret_token: SiteSetting.elastic_apm_secret_token,
+        log_level: SiteSetting.elastic_apm_log_level,
+        service_name: SiteSetting.elastic_apm_service_name,
+        server_url: SiteSetting.elastic_apm_server_url,
+        transaction_sample_rate: SiteSetting.elastic_apm_transaction_sample_rate,
+      )
+    end
+  end
 end
 
 after_initialize do
-	manage_elastic_apm
+  DiscourseElasticApm.manage_elastic_apm
 
-	DiscourseEvent.on(:site_setting_changed) do |setting, _old_value, _new_value|
-		manage_elastic_apm if setting.start_with?('elastic_apm_') || setting == 'discourse_plugin_elastic_apm'
-	end
+  DiscourseEvent.on(:site_setting_changed) do |setting, _old_value, _new_value|
+    DiscourseElasticApm.manage_elastic_apm if setting.start_with?('elastic_apm_') || setting == 'discourse_plugin_elastic_apm'
+  end
 end
 
-Rails.application.middleware.insert_before(0, DiscourseElasticApm::ElasticApmWrapper)
+Rails.application.middleware.insert_before(0, DiscourseElasticApm::ElasticApmMiddlewareWrapper)
 
 at_exit do
-	ElasticAPM.stop if defined?(ElasticAPM) && ElasticAPM.running?
+  ElasticAPM.stop if defined?(ElasticAPM) && ElasticAPM.running?
 end
